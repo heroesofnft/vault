@@ -1,0 +1,9 @@
+{
+  "name": "vault",
+  "version": "1.0.0",
+  "description": "Heroes of Nft vault contracts",
+  "main": "index.js",
+  "repository": "https://github.com/heroesofnft/vault",
+  "author": "defikintaro",
+  "license": "GPL-2.0 or Later"
+}
