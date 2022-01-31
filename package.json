@@ -2,8 +2,50 @@
   "name": "vault",
   "version": "1.0.0",
   "description": "Heroes of Nft vault contracts",
-  "main": "index.js",
+  "keywords": [
+    "solidity",
+    "hon",
+    "nft"
+  ],
   "repository": "https://github.com/heroesofnft/vault",
-  "author": "defikintaro",
-  "license": "GPL-2.0 or Later"
+  "author": "defikintaro <defikintaro@heroesofnft.com>",
+  "license": "GPL-3.0",
+  "scripts": {
+    "build": "npx hardhat compile",
+    "console": "npx hardhat console",
+    "test": "npx hardhat test --verbose",
+    "avash:deploy": "npx hardhat --network avash deploy --export exports/avash/vault-exports.json",
+    "fuji:deploy": "npx hardhat --network fuji deploy --export exports/fuji/vault-exports.json",
+    "fuji:export": "npx hardhat --network fuji export --export exports/fuji/vault-exports.json",
+    "avalanche:deploy": "npx hardhat --network avalanche deploy --export exports/avalanche/vault-exports.json",
+    "avalanche:export": "npx hardhat --network avalanche export --export exports/avalanche/vault-exports.json"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.4.1",
+    "fast-csv": "^4.3.6"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.4",
+    "@nomiclabs/hardhat-etherscan": "^3.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "chai": "^4.3.4",
+    "eslint": "^8.6.0",
+    "ethers": "^5.5.3",
+    "hardhat": "^2.8.2",
+    "hardhat-abi-exporter": "^2.7.2",
+    "hardhat-deploy": "^0.9.24",
+    "hardhat-deploy-ethers": "^0.3.0-beta.13",
+    "hardhat-gas-reporter": "^1.0.6",
+    "hardhat-log-remover": "^2.0.2",
+    "hardhat-preprocessor": "^0.1.4",
+    "hardhat-spdx-license-identifier": "^2.0.3",
+    "hardhat-watcher": "^2.1.1",
+    "prettier": "^2.5.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solidity-coverage": "^0.7.17",
+    "ts-generator": "^0.1.1",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4",
+    "web3": "^1.7.0"
+  }
 }
