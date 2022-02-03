@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title Token Vesting Contract
 /// @author defikintaro
@@ -13,12 +14,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Vesting is Ownable {
   using SafeMath for uint256;
   using Address for address;
+  using SafeERC20 for IERC20;
 
   /// @dev Emits when `initialize` method has been called
   /// @param caller The address of the caller
   /// @param distributionStart Distribution start date
   /// @param installmentPeriod Per installment period
   event Initialized(address caller, uint256 distributionStart, uint256 installmentPeriod);
+
+  /// @dev Emits when `withdraw` method has been called
+  /// @param sender Sender address
+  /// @param value Transferred value
+  event Deposit(address sender, uint256 value);
 
   /// @dev Emits when `withdraw` method has been called
   /// @param recipient Recipient address
@@ -48,11 +55,17 @@ contract Vesting is Ownable {
     address caller
   );
 
+  /// @dev Maximum cliff duration
+  uint256 public constant MAX_CLIFF = 365 days;
+  /// @dev Maximum period
+  uint256 public constant MAX_PERIOD = 14 days;
+  /// @dev Maximum period
+  uint256 public constant MAX_START_PERIOD = 7 days;
+
   /// @dev The instance of ERC20 token
   IERC20 token;
 
   /// @dev Total amount of tokens
-  /// @dev Amount of remaining tokens to distribute for the beneficiary
   /// @dev Beneficiary cliff period
   /// @dev Total number of installments for the beneficiary
   /// @dev Number of installments that were made
@@ -61,7 +74,6 @@ contract Vesting is Ownable {
   /// @dev Boolean variable that contains whether the value at TGE was paid or not
   struct Beneficiary {
     uint256 stake;
-    uint256 tokensLeft;
     uint256 cliff;
     uint256 numberOfInstallments;
     uint256 numberOfInstallmentsMade;
@@ -89,7 +101,7 @@ contract Vesting is Ownable {
   /// @dev Track the number of beneficiaries
   uint256 public numberOfBeneficiaries;
   /// @dev Track the total sum
-  uint256 public sumOfStakes;
+  uint256 public sumOfVesting;
   /// @dev Total deposited tokens
   uint256 public totalDepositedTokens;
   /// @dev Installment period
@@ -119,7 +131,9 @@ contract Vesting is Ownable {
   ) external onlyOwner {
     require(!isInitialized, "Already initialized");
     require(_distributionStart > block.timestamp, "Cannot start early");
+    require(_distributionStart < block.timestamp + MAX_START_PERIOD, "Cannot start late");
     require(_installmentPeriod > 0, "Installment period must be greater than 0");
+    require(_installmentPeriod < MAX_PERIOD, "Installment period must be lesser than the max");
     require(_token.isContract(), "The token address must be a deployed contract");
 
     isInitialized = true;
@@ -134,7 +148,8 @@ contract Vesting is Ownable {
   /// @param _amount Amount of the tokens
   function deposit(uint256 _amount) external onlyOwner initialized {
     totalDepositedTokens += _amount;
-    token.transferFrom(msg.sender, address(this), _amount);
+    token.safeTransferFrom(msg.sender, address(this), _amount);
+    emit Deposit(msg.sender, _amount);
   }
 
   /// @dev Withdraw the TGE amount
@@ -143,7 +158,7 @@ contract Vesting is Ownable {
     require(beneficiaries[msg.sender].stake > 0, "Not a participant");
     if (!beneficiaries[msg.sender].wasValueAtTgePaid) {
       beneficiaries[msg.sender].wasValueAtTgePaid = true;
-      token.transfer(msg.sender, beneficiaries[msg.sender].tgeValue);
+      token.safeTransfer(msg.sender, beneficiaries[msg.sender].tgeValue);
       emit WithdrawnTge(msg.sender, beneficiaries[msg.sender].tgeValue);
     }
   }
@@ -177,7 +192,7 @@ contract Vesting is Ownable {
     uint256 amount = availableInstallments.mul(beneficiaries[sender].installmentValue);
 
     beneficiaries[sender].numberOfInstallmentsMade += availableInstallments;
-    token.transfer(sender, amount);
+    token.safeTransfer(sender, amount);
     emit Withdrawn(sender, amount);
   }
 
@@ -209,11 +224,10 @@ contract Vesting is Ownable {
       _installmentValue *= 1e12;
 
       // Track the sum
-      sumOfStakes += _installmentValue.mul(groups[_group].numberOfInstallments).add(_tgeValue);
+      sumOfVesting += _installmentValue.mul(groups[_group].numberOfInstallments).add(_tgeValue);
 
       beneficiaries[_participants[i]] = Beneficiary({
         stake: _stakes[i],
-        tokensLeft: 0,
         cliff: groups[_group].cliff,
         numberOfInstallments: groups[_group].numberOfInstallments,
         numberOfInstallmentsMade: 0,
@@ -239,6 +253,8 @@ contract Vesting is Ownable {
     uint256 _numberOfInstallments
   ) external onlyOwner {
     require(!isInitialized, "Cannot change a group after initialization");
+    require(_cliff < MAX_CLIFF, "Must be lesser than maximum cliff");
+    require(_numberOfInstallments > 0, "Number of installments must be higher than 0");
     groups[_groupId] = Group({
       active: true,
       cliff: _cliff,
@@ -250,8 +266,8 @@ contract Vesting is Ownable {
 
   /// @dev Withdraw the remaining amount to the owner after stakes are initialized
   function withdrawRemaining() external onlyOwner initialized {
-    uint256 remaining = totalDepositedTokens.sub(sumOfStakes);
-    totalDepositedTokens = sumOfStakes;
-    token.transfer(owner(), remaining);
+    uint256 remaining = totalDepositedTokens.sub(sumOfVesting);
+    totalDepositedTokens = sumOfVesting;
+    token.safeTransfer(owner(), remaining);
   }
 }
