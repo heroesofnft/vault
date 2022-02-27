@@ -156,6 +156,7 @@ contract Vesting is Ownable {
   /// @notice Reverts if there are not enough tokens
   function withdrawTge() external initialized {
     require(beneficiaries[msg.sender].stake > 0, "Not a participant");
+    require(block.timestamp >= distributionStartTimestamp, "Distribution has not started yet");
     if (!beneficiaries[msg.sender].wasValueAtTgePaid) {
       beneficiaries[msg.sender].wasValueAtTgePaid = true;
       token.safeTransfer(msg.sender, beneficiaries[msg.sender].tgeValue);

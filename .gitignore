@@ -5,6 +5,8 @@ node_modules/
 cache/
 abis/
 artifacts/
+deployments/
+exports/
 
 # Env
 .env
@@ -18,3 +20,8 @@ coverage.json
 
 # Typechain
 /typechain/
+
+# yarn
+yarn-error.log
+yarn.lock
+package-lock.json

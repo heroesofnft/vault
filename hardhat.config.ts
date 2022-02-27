@@ -1,0 +1,120 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-etherscan";
+import "hardhat-abi-exporter";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "hardhat-gas-reporter";
+import "hardhat-spdx-license-identifier";
+//import "hardhat-typechain";
+import "hardhat-watcher";
+import "solidity-coverage";
+//import "./tasks";
+import "./tasks/initializeVesting";
+
+import { HardhatUserConfig } from "hardhat/types";
+
+const accounts = [
+];
+
+const config: HardhatUserConfig = {
+  abiExporter: {
+    path: "./abi",
+    clear: false,
+    flat: true,
+    // only: [],
+    // except: []
+  },
+  mocha: {
+    timeout: 20000,
+  },
+  namedAccounts: {
+    deployer: { default: 0 },
+    developer: { default: 1 },
+  },
+
+  networks: {
+    localhost: {
+      live: false,
+      saveDeployments: true,
+      tags: ["local"],
+    },
+    hardhat: {
+      gasPrice: 470000000000,
+      chainId: 43112,
+    },
+    avash: {
+      url: "http://localhost:9650/ext/bc/C/rpc",
+      gasPrice: 470000000000,
+      chainId: 43112,
+      accounts: [],
+    },
+    fuji: {
+      url: "https://api.avax-test.network/ext/bc/C/rpc",
+      accounts: accounts,
+      chainId: 43113,
+      live: true,
+      saveDeployments: true,
+      tags: ["staging"],
+      gasMultiplier: 2,
+      gasPrice: 470000000000,
+    },
+    avalanche: {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+      accounts: accounts,
+      chainId: 43114,
+      live: true,
+      saveDeployments: true,
+      gasPrice: 470000000000,
+    },
+    bsc: {
+      url: "https://bsc-dataseed.binance.org",
+      accounts: accounts,
+      chainId: 56,
+      live: true,
+      saveDeployments: true,
+    },
+    "bsc-testnet": {
+      url: "https://data-seed-prebsc-2-s3.binance.org:8545",
+      accounts: accounts,
+      chainId: 97,
+      live: true,
+      saveDeployments: true,
+      tags: ["staging"],
+      gasMultiplier: 2,
+    },
+  },
+  paths: {
+    artifacts: "artifacts",
+    cache: "cache",
+    deploy: "deploy",
+    deployments: "deployments",
+    imports: "imports",
+    sources: "contracts",
+    tests: "test",
+  },
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.3",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
+  },
+  spdxLicenseIdentifier: {
+    overwrite: false,
+    runOnCompile: true,
+  },
+  etherscan: {
+    apiKey: {
+      avalanche: "",
+      avalancheFujiTestnet: "",
+    },
+  },
+};
+
+export default config;
